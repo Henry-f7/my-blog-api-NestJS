@@ -1,4 +1,5 @@
-import { Body, Controller, Delete, Get, NotFoundException, Param, Post, Put, UnprocessableEntityException } from '@nestjs/common';
+import { Body, Controller, Delete, Get, NotFoundException, Param, Post, Put } from '@nestjs/common';
+import { CreateUserDto, UpdateUserDto } from './dto/user.dto';
 
 interface User {
   id: string;
@@ -36,35 +37,18 @@ export class UsersController {
   }
 
   @Post()
-  createUser(@Body() user: User) {
-    const newUser = {
-      ...user,
-      id: (this.users.length + 1).toString(),
-    };
-
-    if (!newUser.name || !newUser.email) {
-      throw new UnprocessableEntityException('Name and email are required');
-    }
-
-    const email = user?.email;
-    if (email && !email.includes('@')) {
-      throw new UnprocessableEntityException('Email is not valid');
-    }
+  createUser(@Body() user: CreateUserDto) {
+    const newUser = { ...user, id: (this.users.length + 1).toString() };
 
     this.users.push(newUser);
     return { message: 'User created successfully', user };
   }
 
   @Put(':id')
-  updateUser(@Param('id') id: string, @Body() updatedUser: User) {
+  updateUser(@Param('id') id: string, @Body() updatedUser: UpdateUserDto) {
     const userIndex = this.users.findIndex((user) => user.id === id);
     if (userIndex === -1) {
-      return { message: 'User not found' };
-    }
-
-    const email = updatedUser?.email;
-    if (email && !email.includes('@')) {
-      throw new UnprocessableEntityException('Email is not valid');
+      throw new NotFoundException(`User with id ${id} not found`);
     }
 
     this.users[userIndex] = { ...this.users[userIndex], ...updatedUser };
